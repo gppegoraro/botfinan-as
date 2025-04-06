@@ -32,6 +32,12 @@ app.post('/webhook/conectar', (req, res) => {
     res.send('Conexão recebida!');
 });
 
+// Webhook para desconexão
+app.post('/webhook/desconectar', (req, res) => {
+    console.log('Desconexão detectada:', req.body);
+    res.send('Desconexão processada!');
+});
+
 // Rota para enviar mensagens pelo WhatsApp usando Z-API
 app.post('/enviar-mensagem', async (req, res) => {
     const { numero, mensagem } = req.body;
