@@ -1,5 +1,9 @@
-const axios = require('axios'); // Para integração com a API Z-API
-const moment = require('moment'); // Para lidar com datas
+const express = require('express');
+const axios = require('axios');
+const moment = require('moment');
+
+const app = express();
+app.use(express.json());
 
 // Estrutura inicial de dados
 let categorias = ["Alimentação", "Transporte", "Lazer", "Educação", "Saúde", "Moradia", "Investimentos", "Cartões de Crédito"];
@@ -94,7 +98,7 @@ function verificarVencimentos() {
     return vencimentosHoje.map(c => `${c.descricao} - Vence hoje!`).join("\n");
 }
 
-// Função para integração com Z-API
+// Função para enviar mensagens
 async function enviarMensagem(telefone, mensagem) {
     try {
         const response = await axios.post('https://api.z-api.io/instances/{instance_id}/token/{token}/send-message', {
@@ -108,10 +112,36 @@ async function enviarMensagem(telefone, mensagem) {
     }
 }
 
-// Exemplo de uso
-(async () => {
-    const telefone = "5511999999999"; // Número do usuário
-    const mensagem = listarCategorias(); // Exemplo: listar categorias
-    const resposta = await enviarMensagem(telefone, mensagem);
-    console.log(resposta);
-})();
+// Rota para receber mensagens via webhook da Z-API
+app.post('/webhook', async (req, res) => {
+    const mensagemRecebida = req.body.message; // Mensagem enviada pelo usuário
+    const telefone = req.body.phone; // Número do usuário
+
+    console.log(`Mensagem recebida de ${telefone}: ${mensagemRecebida}`);
+
+    // Processar a mensagem recebida e criar uma resposta
+    let resposta;
+    if (mensagemRecebida.toLowerCase() === 'categorias') {
+        resposta = listarCategorias();
+    } else if (mensagemRecebida.toLowerCase().startsWith('adicionar receita')) {
+        const [_, descricao, valor, categoria] = mensagemRecebida.split(';');
+        resposta = adicionarReceita(descricao.trim(), parseFloat(valor.trim()), categoria.trim());
+    } else if (mensagemRecebida.toLowerCase() === 'listar receitas') {
+        resposta = listarReceitas();
+    } else if (mensagemRecebida.toLowerCase() === 'listar despesas') {
+        resposta = listarDespesas();
+    } else {
+        resposta = "Comando não reconhecido. Tente enviar: 'categorias', 'listar receitas' ou 'adicionar receita;descricao;valor;categoria'.";
+    }
+
+    // Enviar a resposta de volta para o usuário
+    await enviarMensagem(telefone, resposta);
+
+    res.sendStatus(200); // Responder à Z-API que a mensagem foi processada
+});
+
+// Iniciar o servidor
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+});
