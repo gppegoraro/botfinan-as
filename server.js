@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 
 // Configurações da Z-API
-const ZAPI_BASE_URL = 'https://api.z-api.io/instance/3DB5A3F06AFC7061997CFE2787F59778';
+const ZAPI_BASE_URL = 'https://api.z-api.io/instances/3DB5A3F06AFC7061997CFE2787F59778/token/93A5749A4C531C89C65C7B95/send-text';
 const ZAPI_TOKEN = '93A5749A4C531C89C65C7B95';
 
 // Rota principal para o caminho "/"
